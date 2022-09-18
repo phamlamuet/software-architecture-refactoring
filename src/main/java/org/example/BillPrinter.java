@@ -9,10 +9,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class BillPrinter {
     JSONObject plays = getPlays();
-    JSONArray invoices = getInvoices();
+
     JSONObject invoice = getInvoices().getJSONObject(0);
 
     String statement() throws Exception {
@@ -20,6 +22,9 @@ public class BillPrinter {
         double totalAmount = 0;
         double volumeCredits = 0;
         String result = "Statement for " + invoice.get("customer") + "\n";
+        Locale locale = new Locale("en", "US");
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(locale);
+        currencyFormatter.setMaximumFractionDigits(2);
 
         JSONArray performances = (JSONArray) invoice.get("performances");
 
@@ -50,15 +55,16 @@ public class BillPrinter {
             volumeCredits += Math.max(perfAudience - 30, 0);
             // add extra credit for every ten comedy attendees
             if ("comedy" == play.get("type")) {
-                volumeCredits += Math.floor(perfAudience / 5);
+                volumeCredits += Math.floor((double) perfAudience / 5);
             }
 
-            result = result + play.get("name") + " : " + thisAmount / 100 + perfAudience + " seats " + "\n";
+            // print line for this order
+            result = result + play.get("name") + " : " + currencyFormatter.format(thisAmount / 100) + " ("+perfAudience  + " seats " + ")" + "\n";
             totalAmount += thisAmount;
 
         }
-        result = result + "Amount owed is " + totalAmount / 100 + "\n";
-        result = result + "You earned " + volumeCredits + "credits" + "\n";
+        result = result + "Amount owed is " + currencyFormatter.format(totalAmount / 100) + "\n";
+        result = result + "You earned " + volumeCredits + " credits" + "\n";
         return result;
 
     }
