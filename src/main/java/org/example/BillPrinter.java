@@ -37,7 +37,7 @@ public class BillPrinter {
             int perfAudience = Integer.parseInt(perf.get("audience").toString());
             switch (play.get("type").toString()) {
                 case "tragedy":
-                    thisAmount = 4000;
+                    thisAmount = 40000;
                     if (perfAudience > 30) {
                         thisAmount += 1000 * (perfAudience - 30);
                     }
@@ -45,21 +45,22 @@ public class BillPrinter {
                 case "comedy":
                     thisAmount = 30000;
                     if (perfAudience > 20) {
-                        thisAmount += 300 * perfAudience;
-                        break;
+                        thisAmount += 10000 + 500 * (perfAudience - 20);
                     }
+                    thisAmount += 300 * perfAudience;
+                    break;
                 default:
                     throw new Exception("unknown type + " + play.get("type").toString());
             }
             // add volume credits
             volumeCredits += Math.max(perfAudience - 30, 0);
             // add extra credit for every ten comedy attendees
-            if ("comedy" == play.get("type")) {
+            if ("comedy".equals(play.get("type"))) {
                 volumeCredits += Math.floor((double) perfAudience / 5);
             }
 
             // print line for this order
-            result = result + play.get("name") + " : " + currencyFormatter.format(thisAmount / 100) + " ("+perfAudience  + " seats " + ")" + "\n";
+            result = result + play.get("name") + " : " + currencyFormatter.format(thisAmount / 100) + " (" + perfAudience + " seats " + ")" + "\n";
             totalAmount += thisAmount;
 
         }
