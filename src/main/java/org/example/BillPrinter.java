@@ -13,11 +13,15 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 public class BillPrinter {
-    JSONObject plays = getPlays();
+    JSONObject plays;
+    JSONObject invoice;
 
-    JSONObject invoice = getInvoices().getJSONObject(0);
+    BillPrinter(){
+        this.plays = getPlays();
+        this.invoice= getInvoice();
+    }
 
-    String statement() throws Exception {
+    String statement()  {
 
         double totalAmount = 0;
         double volumeCredits = 0;
@@ -50,7 +54,7 @@ public class BillPrinter {
                     thisAmount += 300 * perfAudience;
                     break;
                 default:
-                    throw new Exception("unknown type + " + play.get("type").toString());
+                    throw new RuntimeException("unknown type + " + play.get("type").toString());
             }
             // add volume credits
             volumeCredits += Math.max(perfAudience - 30, 0);
@@ -89,7 +93,7 @@ public class BillPrinter {
         return playsList;
     }
 
-    JSONArray getInvoices() {
+    JSONObject getInvoice() {
         String filePath = new File("").getAbsolutePath();
         filePath = filePath.concat("/src/main/resources/invoices.json");
         Path invoicesFilePath = Paths.get(filePath);
@@ -103,8 +107,9 @@ public class BillPrinter {
         }
 
         JSONArray invoicesList = new JSONArray(invoices);
+        JSONObject invoice = invoicesList.getJSONObject(0);
 
-        return invoicesList;
+        return invoice;
     }
 
 }
