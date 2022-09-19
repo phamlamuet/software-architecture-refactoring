@@ -1,0 +1,10 @@
+[
+  {
+    "customer": "Lam Pham",
+    "performances": [
+      {"playID": "Hamlet", "audience": 24},
+      {"playID": "as-like", "audience": 25},
+      {"playID": "othello", "audience": 27}
+    ]
+  }
+]

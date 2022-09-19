@@ -16,12 +16,12 @@ public class BillPrinter {
     JSONObject plays;
     JSONObject invoice;
 
-    BillPrinter(){
-        this.plays = getPlays();
-        this.invoice= getInvoice();
+    BillPrinter(String playsFile, String invoiceFile) {
+        this.plays = getPlays(playsFile);
+        this.invoice = getInvoice(invoiceFile);
     }
 
-    String statement()  {
+    String statement() {
 
         double totalAmount = 0;
         double volumeCredits = 0;
@@ -74,42 +74,38 @@ public class BillPrinter {
 
     }
 
-    JSONObject getPlays() {
+    JSONObject getPlays(String playsFile) {
         //read plays.json file
-        String filePath = new File("").getAbsolutePath();
-        filePath = filePath.concat("/src/main/resources/plays.json");
-        Path playsFilePath = Paths.get(filePath);
-
-        String plays = "";
-
-        try {
-            plays = Files.readString(playsFilePath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String plays = GetDataSource(playsFile);
 
         JSONObject playsList = new JSONObject(plays);
 
         return playsList;
     }
 
-    JSONObject getInvoice() {
+    private String GetDataSource(String sourceFile) {
         String filePath = new File("").getAbsolutePath();
-        filePath = filePath.concat("/src/main/resources/invoices.json");
-        Path invoicesFilePath = Paths.get(filePath);
+        filePath = filePath.concat("/src/main/resources/" + sourceFile);
+        Path playsFilePath = Paths.get(filePath);
 
-        String invoices = "";
+        String data = "";
 
         try {
-            invoices = Files.readString(invoicesFilePath);
+            data = Files.readString(playsFilePath);
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            return data;
         }
+    }
 
+    JSONObject getInvoice(String invoiceFile) {
+        String invoices = GetDataSource(invoiceFile);
         JSONArray invoicesList = new JSONArray(invoices);
         JSONObject invoice = invoicesList.getJSONObject(0);
 
         return invoice;
     }
+
 
 }
