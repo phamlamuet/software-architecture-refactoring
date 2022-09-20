@@ -22,7 +22,6 @@ public class BillPrinter {
     }
 
     String statement() {
-
         double totalAmount = 0;
         double volumeCredits = 0;
         String result = "Statement for " + invoice.get("customer") + "\n";
@@ -36,33 +35,14 @@ public class BillPrinter {
             JSONObject perf = (JSONObject) performances.get(i);
             JSONObject play = (JSONObject) plays.get(((String) perf.get("playID")).toLowerCase());
 
-            double thisAmount = 0;
-
             int perfAudience = Integer.parseInt(perf.get("audience").toString());
-            switch (play.get("type").toString()) {
-                case "tragedy":
-                    thisAmount = 40000;
-                    if (perfAudience > 30) {
-                        thisAmount += 1000 * (perfAudience - 30);
-                    }
-                    break;
-                case "comedy":
-                    thisAmount = 30000;
-                    if (perfAudience > 20) {
-                        thisAmount += 10000 + 500 * (perfAudience - 20);
-                    }
-                    thisAmount += 300 * perfAudience;
-                    break;
-                default:
-                    throw new RuntimeException("unknown type + " + play.get("type").toString());
-            }
+            double thisAmount = amountFor(perf,play,perfAudience);
             // add volume credits
             volumeCredits += Math.max(perfAudience - 30, 0);
             // add extra credit for every ten comedy attendees
             if ("comedy".equals(play.get("type"))) {
                 volumeCredits += Math.floor((double) perfAudience / 5);
             }
-
             // print line for this order
             result = result + play.get("name") + " : " + currencyFormatter.format(thisAmount / 100) + " (" + perfAudience + " seats " + ")" + "\n";
             totalAmount += thisAmount;
@@ -74,13 +54,35 @@ public class BillPrinter {
 
     }
 
+    double amountFor(JSONObject perf, JSONObject play, int perfAudience){
+        double result = 0;
+
+        switch (play.get("type").toString()) {
+            case "tragedy" -> {
+                result = 40000;
+                if (perfAudience > 30) {
+                    result += 1000 * (perfAudience - 30);
+                }
+            }
+            case "comedy" -> {
+                result = 30000;
+                if (perfAudience > 20) {
+                    result += 10000 + 500 * (perfAudience - 20);
+                }
+                result += 300 * perfAudience;
+            }
+            default -> throw new RuntimeException("unknown type + " + play.get("type").toString());
+        }
+        return result;
+    }
+
     JSONObject getPlays(String playsFile) {
-        //read plays.json file
         String plays = GetDataSource(playsFile);
-
-        JSONObject playsList = new JSONObject(plays);
-
-        return playsList;
+        return new JSONObject(plays);
+    }
+    JSONObject getInvoice(String invoiceFile) {
+        String invoices = GetDataSource(invoiceFile);
+        return new JSONArray(invoices).getJSONObject(0);
     }
 
     private String GetDataSource(String sourceFile) {
@@ -99,13 +101,7 @@ public class BillPrinter {
         }
     }
 
-    JSONObject getInvoice(String invoiceFile) {
-        String invoices = GetDataSource(invoiceFile);
-        JSONArray invoicesList = new JSONArray(invoices);
-        JSONObject invoice = invoicesList.getJSONObject(0);
 
-        return invoice;
-    }
 
 
 }
