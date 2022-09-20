@@ -106,9 +106,8 @@ public class BillPrinter {
             data = Files.readString(playsFilePath);
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            return data;
         }
+        return data;
     }
 
 
