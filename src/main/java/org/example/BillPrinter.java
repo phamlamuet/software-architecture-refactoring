@@ -1,6 +1,5 @@
 package org.example;
 
-import org.json.CDL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -28,23 +27,19 @@ public class BillPrinter {
         Locale locale = new Locale("en", "US");
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(locale);
         currencyFormatter.setMaximumFractionDigits(2);
-
         JSONArray performances = (JSONArray) invoice.get("performances");
 
         for (int i = 0; i < performances.length(); i++) {
             JSONObject perf = (JSONObject) performances.get(i);
-            JSONObject play = (JSONObject) plays.get(((String) perf.get("playID")).toLowerCase());
-
-            int perfAudience = Integer.parseInt(perf.get("audience").toString());
-            double thisAmount = amountFor(perf,play,perfAudience);
+            double thisAmount = amountFor(perf);
             // add volume credits
-            volumeCredits += Math.max(perfAudience - 30, 0);
+            volumeCredits += Math.max(audienceFor(perf) - 30, 0);
             // add extra credit for every ten comedy attendees
-            if ("comedy".equals(play.get("type"))) {
-                volumeCredits += Math.floor((double) perfAudience / 5);
+            if ("comedy".equals(playFor(perf).get("type"))) {
+                volumeCredits += Math.floor((double) audienceFor(perf) / 5);
             }
             // print line for this order
-            result = result + play.get("name") + " : " + currencyFormatter.format(thisAmount / 100) + " (" + perfAudience + " seats " + ")" + "\n";
+            result = result + playFor(perf).get("name") + " : " + currencyFormatter.format(thisAmount / 100) + " (" + audienceFor(perf) + " seats " + ")" + "\n";
             totalAmount += thisAmount;
 
         }
@@ -54,7 +49,17 @@ public class BillPrinter {
 
     }
 
-    double amountFor(JSONObject perf, JSONObject play, int perfAudience){
+    JSONObject playFor(JSONObject perf){
+        return (JSONObject) plays.get(((String) perf.get("playID")).toLowerCase());
+    }
+
+    int audienceFor(JSONObject perf){
+        return Integer.parseInt(perf.get("audience").toString());
+    }
+
+    double amountFor(JSONObject perf){
+        JSONObject play = playFor(perf);
+        int perfAudience = audienceFor(perf);
         double result = 0;
 
         switch (play.get("type").toString()) {
