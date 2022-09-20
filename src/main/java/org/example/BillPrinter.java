@@ -24,40 +24,44 @@ public class BillPrinter {
         double totalAmount = 0;
         double volumeCredits = 0;
         String result = "Statement for " + invoice.get("customer") + "\n";
-        Locale locale = new Locale("en", "US");
-        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(locale);
-        currencyFormatter.setMaximumFractionDigits(2);
         JSONArray performances = (JSONArray) invoice.get("performances");
 
         for (int i = 0; i < performances.length(); i++) {
             JSONObject perf = (JSONObject) performances.get(i);
-            double thisAmount = amountFor(perf);
-            // add volume credits
-            volumeCredits += Math.max(audienceFor(perf) - 30, 0);
-            // add extra credit for every ten comedy attendees
-            if ("comedy".equals(playFor(perf).get("type"))) {
-                volumeCredits += Math.floor((double) audienceFor(perf) / 5);
-            }
-            // print line for this order
-            result = result + playFor(perf).get("name") + " : " + currencyFormatter.format(thisAmount / 100) + " (" + audienceFor(perf) + " seats " + ")" + "\n";
-            totalAmount += thisAmount;
-
+            volumeCredits += volumeCreditsFor(perf);
+            totalAmount += amountFor(perf);
+            result = result + playFor(perf).get("name") + " : " + formatToUSD(amountFor(perf) / 100) + " (" + audienceFor(perf) + " seats " + ")" + "\n";
         }
-        result = result + "Amount owed is " + currencyFormatter.format(totalAmount / 100) + "\n";
+        result = result + "Amount owed is " + formatToUSD(totalAmount / 100) + "\n";
         result = result + "You earned " + volumeCredits + " credits" + "\n";
         return result;
-
     }
 
-    JSONObject playFor(JSONObject perf){
+    String formatToUSD(double number) {
+        Locale locale = new Locale("en", "US");
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(locale);
+        currencyFormatter.setMaximumFractionDigits(2);
+        return currencyFormatter.format(number);
+    }
+
+    double volumeCreditsFor(JSONObject perf) {
+        double result = 0;
+        result += Math.max(audienceFor(perf) - 30, 0);
+        if ("comedy".equals(playFor(perf).get("type"))) {
+            result += Math.floor((double) audienceFor(perf) / 5);
+        }
+        return result;
+    }
+
+    JSONObject playFor(JSONObject perf) {
         return (JSONObject) plays.get(((String) perf.get("playID")).toLowerCase());
     }
 
-    int audienceFor(JSONObject perf){
+    int audienceFor(JSONObject perf) {
         return Integer.parseInt(perf.get("audience").toString());
     }
 
-    double amountFor(JSONObject perf){
+    double amountFor(JSONObject perf) {
         JSONObject play = playFor(perf);
         int perfAudience = audienceFor(perf);
         double result = 0;
@@ -85,6 +89,7 @@ public class BillPrinter {
         String plays = GetDataSource(playsFile);
         return new JSONObject(plays);
     }
+
     JSONObject getInvoice(String invoiceFile) {
         String invoices = GetDataSource(invoiceFile);
         return new JSONArray(invoices).getJSONObject(0);
@@ -105,8 +110,6 @@ public class BillPrinter {
             return data;
         }
     }
-
-
 
 
 }
