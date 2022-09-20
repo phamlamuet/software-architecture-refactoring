@@ -15,6 +15,7 @@ public class BillPrinter {
     JSONObject plays;
     JSONObject invoice;
 
+    PerformanceCalculator performanceCalculator;
     BillPrinter(String playsFile, String invoiceFile) {
         this.plays = getPlays(playsFile);
         this.invoice = getInvoice(invoiceFile);
@@ -28,9 +29,12 @@ public class BillPrinter {
 
         for (int i = 0; i < performances.length(); i++) {
             JSONObject perf = (JSONObject) performances.get(i);
-            volumeCredits += volumeCreditsFor(perf);
-            totalAmount += amountFor(perf);
-            result = result + playFor(perf).get("name") + " : " + formatToUSD(amountFor(perf) / 100) + " (" + audienceFor(perf) + " seats " + ")" + "\n";
+            performanceCalculator = new PerformanceCalFactory().getPerformanceCal(playFor(perf),perf);
+//            volumeCredits += volumeCreditsFor(perf);
+//            totalAmount += amountFor(perf);
+            volumeCredits+= performanceCalculator.getVolumeCredits();
+            totalAmount+= performanceCalculator.getAmount();
+            result = result + playFor(perf).get("name") + " : " + formatToUSD(performanceCalculator.getAmount() / 100) + " (" + audienceFor(perf) + " seats " + ")" + "\n";
         }
         result = result + "Amount owed is " + formatToUSD(totalAmount / 100) + "\n";
         result = result + "You earned " + volumeCredits + " credits" + "\n";
@@ -44,14 +48,14 @@ public class BillPrinter {
         return currencyFormatter.format(number);
     }
 
-    double volumeCreditsFor(JSONObject perf) {
-        double result = 0;
-        result += Math.max(audienceFor(perf) - 30, 0);
-        if ("comedy".equals(playFor(perf).get("type"))) {
-            result += Math.floor((double) audienceFor(perf) / 5);
-        }
-        return result;
-    }
+//    double volumeCreditsFor(JSONObject perf) {
+//        double result = 0;
+//        result += Math.max(audienceFor(perf) - 30, 0);
+//        if ("comedy".equals(playFor(perf).get("type"))) {
+//            result += Math.floor((double) audienceFor(perf) / 5);
+//        }
+//        return result;
+//    }
 
     JSONObject playFor(JSONObject perf) {
         return (JSONObject) plays.get(((String) perf.get("playID")).toLowerCase());
@@ -61,29 +65,29 @@ public class BillPrinter {
         return Integer.parseInt(perf.get("audience").toString());
     }
 
-    double amountFor(JSONObject perf) {
-        JSONObject play = playFor(perf);
-        int perfAudience = audienceFor(perf);
-        double result = 0;
-
-        switch (play.get("type").toString()) {
-            case "tragedy" -> {
-                result = 40000;
-                if (perfAudience > 30) {
-                    result += 1000 * (perfAudience - 30);
-                }
-            }
-            case "comedy" -> {
-                result = 30000;
-                if (perfAudience > 20) {
-                    result += 10000 + 500 * (perfAudience - 20);
-                }
-                result += 300 * perfAudience;
-            }
-            default -> throw new RuntimeException("unknown type + " + play.get("type").toString());
-        }
-        return result;
-    }
+//    double amountFor(JSONObject perf) {
+//        JSONObject play = playFor(perf);
+//        int perfAudience = audienceFor(perf);
+//        double result = 0;
+//
+//        switch (play.get("type").toString()) {
+//            case "tragedy" -> {
+//                result = 40000;
+//                if (perfAudience > 30) {
+//                    result += 1000 * (perfAudience - 30);
+//                }
+//            }
+//            case "comedy" -> {
+//                result = 30000;
+//                if (perfAudience > 20) {
+//                    result += 10000 + 500 * (perfAudience - 20);
+//                }
+//                result += 300 * perfAudience;
+//            }
+//            default -> throw new RuntimeException("unknown type + " + play.get("type").toString());
+//        }
+//        return result;
+//    }
 
     JSONObject getPlays(String playsFile) {
         String plays = GetDataSource(playsFile);
